@@ -1,0 +1,71 @@
+﻿@page
+@model IndexModel
+@using Microsoft.AspNetCore.Identity
+@using WebApplication3.Model
+@using Microsoft.AspNetCore.DataProtection;
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery Antiforgery
+@inject IHttpContextAccessor contxt;
+@inject SignInManager<ApplicationUser> SignInManager
+@{
+    ViewData["Title"] = "Home page";
+    var currentUser = await SignInManager.UserManager.GetUserAsync(User);
+    var dataProtectionProvider = DataProtectionProvider.Create("EncryptData");
+    var protector = dataProtectionProvider.CreateProtector("MySecretKey");
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    @{
+        if (SignInManager.IsSignedIn(User) && 
+        contxt.HttpContext.Session.GetString("LoggedIn") == "True" && 
+        contxt.HttpContext.Session.GetString("AuthToken") != null && 
+        Request.Cookies["AuthToken"] != null)
+        {
+            string authTokenFromCookie = Request.Cookies["AuthToken"];
+            string authTokenFromSession = contxt.HttpContext.Session.GetString("AuthToken");
+
+            if (authTokenFromCookie == authTokenFromSession)
+            {
+                <div id="UserInformation" disabled>
+                    <p>Your Full Name: @protector.Unprotect(contxt.HttpContext.Session.GetString("Full Name"))</p>
+                    <p>Your credit card: @protector.Unprotect(contxt.HttpContext.Session.GetString("Credit Card"))</p>
+                    <p>Your gender: @protector.Unprotect(contxt.HttpContext.Session.GetString("Gender"))</p>
+                    <p>Your mobile number: @protector.Unprotect(contxt.HttpContext.Session.GetString("Mobile Number"))</p>
+                    <p>Your delivery address: @protector.Unprotect(contxt.HttpContext.Session.GetString("Delivery Address"))</p>
+                    <p>Your about me: @protector.Unprotect(contxt.HttpContext.Session.GetString("About Me"))</p>
+                    <p>Your photo:</p>
+                    <img src="@contxt.HttpContext.Session.GetString("Photo Path")" alt="User Photo" />
+                </div>
+            }
+        }
+        else if (SignInManager.IsSignedIn(User) && contxt.HttpContext.Session.GetString("LoggedIn") == null)
+        {
+            <p>Your session timed out, <a asp-page-handler="Logout">please sign in again.</a></p>
+        }
+        else{
+            <p>You are not logged in.</p>
+        }
+    }
+</div>
+
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", function () {
+        var UserDetails = document.getElementById("UserInformation");
+
+        function checkTokenValidity() {
+            var token = @Antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
+
+            var isValidToken = (token !== '');
+
+            if (isValidToken) {
+                UserDetails.disabled = false;
+            } else {
+                UserDetails.disabled = true;
+            }
+        }
+
+        checkTokenValidity();
+    });
+</script>
