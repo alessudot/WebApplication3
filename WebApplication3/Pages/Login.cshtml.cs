@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net;
 using WebApplication3.Model;
 using WebApplication3.ViewModels;
+using System.Text.Encodings.Web;
 
 namespace WebApplication3.Pages
 {
@@ -28,12 +29,16 @@ namespace WebApplication3.Pages
         {
         }
 
+
         public async Task<IActionResult> OnPostAsync()
         {
             if (ModelState.IsValid)
             {
+                var dataProtectionProvider = DataProtectionProvider.Create("EncryptData");
+                var protector = dataProtectionProvider.CreateProtector("MySecretKey");
+
                 var result = await signInManager.PasswordSignInAsync(LModel.Email, LModel.Password,
-                    LModel.RememberMe, lockoutOnFailure: true);
+                    LModel.RememberMe, true);
                 var currentUser = await userManager.FindByEmailAsync(LModel.Email);
                 if (result.Succeeded)
                 {
@@ -41,6 +46,8 @@ namespace WebApplication3.Pages
                     if (currentUser != null)
                     {
                         contxt.HttpContext.Session.SetString("LoggedIn", "True");
+                        contxt.HttpContext.Session.SetString("Email", protector.Protect(LModel.Email));
+                        contxt.HttpContext.Session.SetString("Password", protector.Protect(LModel.Password));
                         contxt.HttpContext.Session.SetString("Full Name", currentUser.FullName.ToString());
                         contxt.HttpContext.Session.SetString("Credit Card", currentUser.CreditCard.ToString());
                         contxt.HttpContext.Session.SetString("Gender", currentUser.Gender.ToString());
@@ -55,6 +62,7 @@ namespace WebApplication3.Pages
                         contxt.HttpContext.Response.Cookies.Append("AuthToken", authToken, new CookieOptions
                         {
                             HttpOnly = true,
+                            Secure = true,
                             Expires = DateTimeOffset.UtcNow.AddDays(3)
                         });
                         return RedirectToPage("Index");

@@ -10,12 +10,12 @@ namespace WebApplication3.ViewModels
 
         [Required(ErrorMessage = "Your full name is required.")]
         [DataType(DataType.Text)]
-        [RegularExpression(@"^(?=.*a-zA-Z)$", ErrorMessage = "Your full name can only include letters.")]
+        [RegularExpression(@"^[a-zA-Z\s'-]+$", ErrorMessage = "Your full name can only include letters.")]
         public string FullName { get; set; }
 
         [Required(ErrorMessage = "A Credit Card Number is required.")]
         [DataType(DataType.CreditCard)]
-        [RegularExpression(@"^(?=.*\d).{16}$", ErrorMessage = "Credit card number must consist of 16 digits.")]
+        [RegularExpression(@"^\d{16}$", ErrorMessage = "Credit card number must consist of 16 digits.")]
         public string CreditCard { get; set; }
 
         [Required(ErrorMessage = "Please select your Gender")]
@@ -24,17 +24,17 @@ namespace WebApplication3.ViewModels
 
         [Required(ErrorMessage = "A phone number is required.")]
         [DataType(DataType.PhoneNumber)]
-        [RegularExpression(@"^(?=.*\d)$", ErrorMessage = "Phone number can only include numbers.")]
+        [RegularExpression(@"^[\d]+$", ErrorMessage = "Phone number can only include numbers.")]
         public string MobileNo { get; set; }
 
         [Required(ErrorMessage = "A Delivery Address is required.")]
         [DataType(DataType.Text)]
-        [RegularExpression(@"^(?=.*\w)$", ErrorMessage = "Delivery address can only include letters and numbers.")]
+        [RegularExpression(@"^[a-zA-Z0-9\s,'-]+$", ErrorMessage = "Delivery address can only include letters and numbers.")]
         public string DeliveryAddress { get; set; }
 
         [Required(ErrorMessage = "Email address is required.")]
         [DataType(DataType.EmailAddress)]
-        [RegularExpression(@"^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$", ErrorMessage = "Please enter a valid email.")]
+        [RegularExpression(@"^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,})+$", ErrorMessage = "Please enter a valid email.")]
         public string Email { get; set; }
 
         [Required(ErrorMessage = "Password is required.")]
@@ -56,7 +56,7 @@ namespace WebApplication3.ViewModels
 
         [Required]
         [DataType(DataType.Text)]
-        [RegularExpression(@"^(?=.*[^<>])$", ErrorMessage = "About me cannot include '<' and '>'.")]
+        [RegularExpression(@"^[^<>]*$", ErrorMessage = "About me cannot include '<' and '>'.")]
         public string AboutMe { get; set; }
 	}
 }

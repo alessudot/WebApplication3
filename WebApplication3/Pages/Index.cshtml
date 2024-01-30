@@ -29,6 +29,8 @@
             if (authTokenFromCookie == authTokenFromSession)
             {
                 <div id="UserInformation" disabled>
+                    <p>Your Email: @protector.Unprotect(contxt.HttpContext.Session.GetString("Email"))</p>
+                    <p>Your Full Name: @protector.Unprotect(contxt.HttpContext.Session.GetString("Password"))</p>
                     <p>Your Full Name: @protector.Unprotect(contxt.HttpContext.Session.GetString("Full Name"))</p>
                     <p>Your credit card: @protector.Unprotect(contxt.HttpContext.Session.GetString("Credit Card"))</p>
                     <p>Your gender: @protector.Unprotect(contxt.HttpContext.Session.GetString("Gender"))</p>

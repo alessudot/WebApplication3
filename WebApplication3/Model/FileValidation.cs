@@ -5,7 +5,7 @@ namespace WebApplication3.Model
 {
     public class FileValidation : ValidationAttribute
     {
-        private const string AllowedFileTypes = ".jpg,.jpeg";
+        private const string AllowedFileTypes = ".jpeg";
 
         protected override ValidationResult IsValid(object photo, ValidationContext validationContext)
         {

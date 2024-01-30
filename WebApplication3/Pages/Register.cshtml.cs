@@ -9,6 +9,9 @@ using WebApplication3.Model;
 using WebApplication3.ViewModels;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
+using System.Text.Encodings.Web;
+using System.Net.Http;
+using Newtonsoft.Json;
 
 
 namespace WebApplication3.Pages
@@ -25,45 +28,63 @@ namespace WebApplication3.Pages
         private readonly SignInManager<ApplicationUser> signInManager;
         private readonly IHttpContextAccessor contxt;
         private readonly RoleManager<IdentityRole> roleManager;
+        private readonly HtmlEncoder _htmlEncoder;
+
 
         public RegisterModel(UserManager<ApplicationUser> userManager,
 							 SignInManager<ApplicationUser> signInManager,
 							 IWebHostEnvironment environment,
                              IHttpContextAccessor contxt,
-                             RoleManager<IdentityRole> roleManager)
+                             RoleManager<IdentityRole> roleManager,
+                             HtmlEncoder htmlEncoder)
 		{
 			this.userManager = userManager;
 			this.signInManager = signInManager;
 			_environment = environment;
             this.contxt = contxt;
             this.roleManager = roleManager;
+            _htmlEncoder = htmlEncoder;
         }
 
-
-		public void OnGet()
+        public void OnGet()
         {
         }
 
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(string recaptchaToken)
+
+        //public async Task<IActionResult> OnPostAsync()
         {
             if (ModelState.IsValid)
             {
                 var dataProtectionProvider = DataProtectionProvider.Create("EncryptData");
                 var protector = dataProtectionProvider.CreateProtector("MySecretKey");
 
+                HttpClient httpClient = new HttpClient();
+                var response = await httpClient.GetAsync($"https://www.google.com/recaptcha/api/siteverify?secret=6LfD614pAAAAAIoEpA0PDfdwj0LkbP8t0K1n6CE2&response={recaptchaToken}");
+                response.EnsureSuccessStatusCode();
+                string responseBody = await response.Content.ReadAsStringAsync();
+                var recaptchaResult = JsonConvert.DeserializeObject<RecaptchaResponse>(responseBody);
+
+                if (!recaptchaResult.Success)
+                {
+                    ModelState.AddModelError("", "reCAPTCHA verification failed.");
+                    TempData["ErrorMessage"] = "reCAPTCHA verification failed.";
+                    return RedirectToPage();
+                }
+
                 var user = new ApplicationUser()
                 {
-                    FullName = protector.Protect(RModel.FullName),
-                    CreditCard = protector.Protect(RModel.CreditCard),
-                    Gender = protector.Protect(RModel.Gender),
-                    MobileNo = protector.Protect(RModel.MobileNo),
-                    DeliveryAddress = protector.Protect(RModel.DeliveryAddress),
-                    AboutMe = protector.Protect(RModel.AboutMe),
+                    FullName = _htmlEncoder.Encode(protector.Protect(RModel.FullName)),
+                    CreditCard = _htmlEncoder.Encode(protector.Protect(RModel.CreditCard)),
+                    Gender = _htmlEncoder.Encode(protector.Protect(RModel.Gender)),
+                    MobileNo = _htmlEncoder.Encode(protector.Protect(RModel.MobileNo)),
+                    DeliveryAddress = _htmlEncoder.Encode(protector.Protect(RModel.DeliveryAddress)),
+                    AboutMe = _htmlEncoder.Encode(protector.Protect(RModel.AboutMe)),
                     UserName = RModel.Email,
                     Email = RModel.Email,
                 };
 
-                IdentityRole AdminRole = await roleManager.FindByIdAsync("Admin");
+                IdentityRole AdminRole = await roleManager.FindByNameAsync("Admin");
                 if (AdminRole == null)
                 {
                     IdentityResult result2 = await roleManager.CreateAsync(new IdentityRole("Admin"));
@@ -73,7 +94,7 @@ namespace WebApplication3.Pages
                     }
                 }
 
-                IdentityRole UserRole = await roleManager.FindByIdAsync("User");
+                IdentityRole UserRole = await roleManager.FindByNameAsync("User");
                 if (UserRole == null)
                 {
                     IdentityResult result2 = await roleManager.CreateAsync(new IdentityRole("User"));
@@ -114,6 +135,8 @@ namespace WebApplication3.Pages
                 {
                     if (currentUser != null)
                     {
+                        contxt.HttpContext.Session.SetString("Email", protector.Protect(RModel.Email));
+                        contxt.HttpContext.Session.SetString("Password", protector.Protect(RModel.Password));
                         contxt.HttpContext.Session.SetString("LoggedIn", "True");
                         contxt.HttpContext.Session.SetString("Full Name", currentUser.FullName.ToString());
                         contxt.HttpContext.Session.SetString("Credit Card", currentUser.CreditCard.ToString());
@@ -129,11 +152,12 @@ namespace WebApplication3.Pages
                         contxt.HttpContext.Response.Cookies.Append("AuthToken", authToken, new CookieOptions
                         {
                             HttpOnly = true,
+                            Secure = true,
                             Expires = DateTimeOffset.UtcNow.AddDays(3)
                         });
 
                         result = await userManager.AddToRoleAsync(user, "User");
-                        await signInManager.SignInAsync(user, false);
+                        await signInManager.SignInAsync(user, true);
                         return RedirectToPage("Index");
                     }
                     else
@@ -150,6 +174,11 @@ namespace WebApplication3.Pages
             }
 
             return Page();
+        }
+
+        public class RecaptchaResponse
+        {
+            public bool Success { get; set; }
         }
 
     }

@@ -8,7 +8,13 @@
     <div class="row justify-content-center align-items-center">
         <div class="col-sm-12 col-md-12 col-lg-4">
             <h1 class="mb-3">Register</h1>
-            <form method="post" enctype="multipart/form-data" id="demo-form">
+            <form method="post" enctype="multipart/form-data" id="register-form">
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @TempData["ErrorMessage"]
+                    </div>
+                }
                 <div asp-validation-summary="All" class="text-danger"></div>
 
                 <div class="mb-3">
@@ -76,11 +82,10 @@
                     <span asp-validation-for="RModel.AboutMe" class="text-danger"></span>
                 </div>
 
+                <input type="hidden" id="recaptchaToken" name="recaptchaToken" />
 
                 <div class="mb-3">
-                    <button class="g-recaptcha btn btn-primary"
-                            data-sitekey="6LfD614pAAAAANHzMS7s5HYfo7GsLHwxvszNbZPz"
-                            data-callback='onSubmit'
+                    <button class="btn btn-primary"
                             type="submit">
                         Register
                     </button>
@@ -135,9 +140,19 @@
         }
     }
 </script>
-<script src="https://www.google.com/recaptcha/api.js"></script>
+<script src="https://www.google.com/recaptcha/api.js?render=6LfD614pAAAAANHzMS7s5HYfo7GsLHwxvszNbZPz"></script>
 <script>
     function onSubmit(token) {
-        document.getElementById("demo-form").submit();
+        document.getElementById('recaptchaToken').value = token;
+        document.getElementById('register-form').submit();
     }
+
+    var recaptchaResponse = 0;
+    grecaptcha.ready(function () {
+        grecaptcha.execute('6LfD614pAAAAANHzMS7s5HYfo7GsLHwxvszNbZPz', { action: 'submit' })
+            .then(function (token) {
+                recaptchaResponse = document.getElementById('recaptchaToken');
+                recaptchaResponse.value = token;
+            });
+    });
 </script>
