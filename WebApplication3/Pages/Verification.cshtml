@@ -1,0 +1,36 @@
+﻿@page
+@inject IHttpContextAccessor contxt;
+@using Microsoft.AspNetCore.DataProtection;
+@model WebApplication3.Pages.VerificationModel
+@{
+    var dataProtectionProvider = DataProtectionProvider.Create("EncryptData");
+    var protector = dataProtectionProvider.CreateProtector("MySecretKey");
+}
+@if (HttpContext.Request.Query["email"].Count != 0)
+{
+    <div class="container mt-5">
+
+        <div class="row justify-content-center align-items-center">
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+
+            <div class="col-sm-12 col-md-12 col-lg-4">
+                <h1 class="mb-3">Account Activation </h1>
+                <form method="post">
+                    <input type="hidden" name="EmailAccount" value="@HttpContext.Request.Query["email"]" />
+
+                    <input type="hidden" name="ResetToken" value="@HttpContext.Request.Query["token"]" />
+
+                    <div class="mb-3">
+                        <button  type="submit" class="btn btn-primary">Activate</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

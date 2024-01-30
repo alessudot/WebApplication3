@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using WebApplication3.Model;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddDbContext<AuthDbContext>();
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<AuthDbContext>();
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<AuthDbContext>().AddDefaultTokenProviders();
 builder.Services.AddDataProtection();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddDistributedMemoryCache();
@@ -53,10 +52,10 @@ app.UseAuthorization();
 app.Use(async (context, next) =>
 {
     var session = context.Session;
-    if (session.IsAvailable && session.Keys.Count() == 0) // Check if session is expired
+    if (session.IsAvailable && session.Keys.Count() == 0)
     {
         var userManager = context.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
-        await context.SignOutAsync(IdentityConstants.ApplicationScheme); // Sign out the user
+        await context.SignOutAsync(IdentityConstants.ApplicationScheme);
     }
     await next();
 });

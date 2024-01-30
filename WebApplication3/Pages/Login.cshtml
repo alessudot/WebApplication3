@@ -15,6 +15,12 @@
 							@TempData["ErrorMessage"]
 						</div>
 					}
+					@if (TempData["SuccessMessage"] != null)
+					{
+						<div class="alert alert-success" role="alert">
+							@TempData["SuccessMessage"]
+						</div>
+					}
 					<div class="mb-3">
 						<label class="form-label" asp-for="LModel.Email">Email Address</label>
 						<input type="Text" asp-for="LModel.Email" class="form-control" />
@@ -30,6 +36,10 @@
 					<div class="mb-3 form-check">
 						<input type="checkbox" asp-for="LModel.RememberMe" class="form-check-input" />
 						<label class="form-check-label" asp-for="LModel.RememberMe">Remember Me?</label>
+					</div>
+
+					<div class="mb-3">
+						<a class="text-dark" asp-area="" asp-page="/ForgotPassword">Forgot password?</a>
 					</div>
 
 					<div class="mb-3">

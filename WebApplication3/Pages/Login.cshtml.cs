@@ -42,7 +42,8 @@ namespace WebApplication3.Pages
                 var currentUser = await userManager.FindByEmailAsync(LModel.Email);
                 if (result.Succeeded)
                 {
-
+                    currentUser.LastLogin = DateTime.Now;
+                    await userManager.UpdateAsync(currentUser);
                     if (currentUser != null)
                     {
                         contxt.HttpContext.Session.SetString("LoggedIn", "True");
@@ -55,7 +56,10 @@ namespace WebApplication3.Pages
                         contxt.HttpContext.Session.SetString("Delivery Address", currentUser.DeliveryAddress.ToString());
                         contxt.HttpContext.Session.SetString("About Me", currentUser.AboutMe.ToString());
                         contxt.HttpContext.Session.SetString("Photo Path", currentUser.PhotoPath.ToString());
-                        string authToken = Guid.NewGuid().ToString();
+                        contxt.HttpContext.Session.SetString("Last Login", currentUser.LastLogin.ToString());
+                        contxt.HttpContext.Session.SetString("Previous Passwords", currentUser.PreviousPasswords.ToString());
+						contxt.HttpContext.Session.SetString("Last Password Change", currentUser.LastPasswordChange.ToString());
+						string authToken = Guid.NewGuid().ToString();
 
                         contxt.HttpContext.Session.SetString("AuthToken", authToken);
 
@@ -73,9 +77,14 @@ namespace WebApplication3.Pages
                         return RedirectToPage();
                     }
                 }
-                if (result.IsLockedOut)
+                else if (result.IsLockedOut)
                 {
                     TempData["ErrorMessage"] = "Account is locked out due to 3 failed login attempts. Please try again in later.";
+                    return RedirectToPage();
+                }
+                else if (currentUser.TwoFactorEnabled != true || currentUser.EmailConfirmed != true)
+                {
+                    TempData["ErrorMessage"] = "Your account is not activated, please check your email for an activation link.";
                     return RedirectToPage();
                 }
                 else

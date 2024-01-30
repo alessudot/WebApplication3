@@ -12,6 +12,12 @@ using Microsoft.AspNetCore.Hosting;
 using System.Text.Encodings.Web;
 using System.Net.Http;
 using Newtonsoft.Json;
+using System.Net.Mail;
+using System.Net.Mime;
+using System.Net;
+using System.Text.Json;
+using System.Text;
+using static System.Net.WebRequestMethods;
 
 
 namespace WebApplication3.Pages
@@ -52,7 +58,6 @@ namespace WebApplication3.Pages
 
         public async Task<IActionResult> OnPostAsync(string recaptchaToken)
 
-        //public async Task<IActionResult> OnPostAsync()
         {
             if (ModelState.IsValid)
             {
@@ -80,6 +85,8 @@ namespace WebApplication3.Pages
                     MobileNo = _htmlEncoder.Encode(protector.Protect(RModel.MobileNo)),
                     DeliveryAddress = _htmlEncoder.Encode(protector.Protect(RModel.DeliveryAddress)),
                     AboutMe = _htmlEncoder.Encode(protector.Protect(RModel.AboutMe)),
+                    PreviousPasswords = _htmlEncoder.Encode(protector.Protect(RModel.Password) + "|" + protector.Protect("")),
+                    LastPasswordChange = DateTime.Now,
                     UserName = RModel.Email,
                     Email = RModel.Email,
                 };
@@ -128,37 +135,53 @@ namespace WebApplication3.Pages
                     user.PhotoPath = "/uploads/" + filename;
                 }
 
-                var result = await userManager.CreateAsync(user, RModel.Password);
+				var result = await userManager.CreateAsync(user, RModel.Password);
                 var currentUser = await userManager.FindByEmailAsync(RModel.Email);
 
                 if (result.Succeeded)
                 {
                     if (currentUser != null)
                     {
-                        contxt.HttpContext.Session.SetString("Email", protector.Protect(RModel.Email));
-                        contxt.HttpContext.Session.SetString("Password", protector.Protect(RModel.Password));
-                        contxt.HttpContext.Session.SetString("LoggedIn", "True");
-                        contxt.HttpContext.Session.SetString("Full Name", currentUser.FullName.ToString());
-                        contxt.HttpContext.Session.SetString("Credit Card", currentUser.CreditCard.ToString());
-                        contxt.HttpContext.Session.SetString("Gender", currentUser.Gender.ToString());
-                        contxt.HttpContext.Session.SetString("Mobile Number", currentUser.MobileNo.ToString());
-                        contxt.HttpContext.Session.SetString("Delivery Address", currentUser.DeliveryAddress.ToString());
-                        contxt.HttpContext.Session.SetString("About Me", currentUser.AboutMe.ToString());
-                        contxt.HttpContext.Session.SetString("Photo Path", currentUser.PhotoPath.ToString());
-                        string authToken = Guid.NewGuid().ToString();
+                        await userManager.AddToRoleAsync(user, "User");
 
-                        contxt.HttpContext.Session.SetString("AuthToken", authToken);
+                        var ProtectedEmail = protector.Protect(RModel.Email);
+                        var token = await userManager.GenerateEmailConfirmationTokenAsync(currentUser);
+                        var ProtectedToken = protector.Protect(token);
 
-                        contxt.HttpContext.Response.Cookies.Append("AuthToken", authToken, new CookieOptions
+                        var smtpClient = new SmtpClient("smtp.ethereal.email")
                         {
-                            HttpOnly = true,
-                            Secure = true,
-                            Expires = DateTimeOffset.UtcNow.AddDays(3)
-                        });
+                            Port = 587,
+                            Credentials = new NetworkCredential("rose.swift@ethereal.email", "UN1wPX1jXm2Vw1bEGe"),
+                            EnableSsl = true,
+                        };
 
-                        result = await userManager.AddToRoleAsync(user, "User");
-                        await signInManager.SignInAsync(user, true);
-                        return RedirectToPage("Index");
+                        var attachment = Attachment.CreateAttachmentFromString(System.Text.Json.JsonSerializer.Serialize(new
+                        {
+                            Message = "Hello World!"
+                        }), "helloworld.json", Encoding.UTF8, MediaTypeNames.Application.Json);
+
+                        var message = new MailMessage("fromtest@test.com", "sendertest@test.com")
+                        {
+                            Subject = "Verification email",
+                            Body = $"<p>Click on this link to verify your account <a href=https://localhost:7175/Verification?email={ProtectedEmail}&token={ProtectedToken} target=\"_blank\">https://localhost:7175/Verification?email={ProtectedEmail}&token={ProtectedToken}</a></p>",
+                            IsBodyHtml = true,
+                        };
+
+                        message.Attachments.Add(attachment);
+
+                        try
+                        {
+                            smtpClient.Send(message);
+                            TempData["SuccessMessage"] = "Verification email sent successfully.";
+                        }
+                        catch (SmtpException ex)
+                        {
+                            TempData["ErrorMessage"] = $"Failed to send verification email: {ex.Message}";
+                            Console.WriteLine(ex.ToString());
+                        }
+
+                        TempData["Message"] = "Please verify your email address. A verification email was sent to you.";
+                        return RedirectToPage("Login");
                     }
                     else
                     {

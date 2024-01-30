@@ -11,5 +11,10 @@ namespace WebApplication3.Model
         public string DeliveryAddress { get; set; }
         public string PhotoPath { get; set; }
         public string AboutMe { get; set; }
+        public DateTime LastLogin { get; set; }
+        public string PreviousPasswords { get; set; }
+
+        public DateTime LastPasswordChange { get; set; }
     }
+
 }

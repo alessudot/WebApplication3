@@ -9,9 +9,10 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @{
     ViewData["Title"] = "Home page";
-    var currentUser = await SignInManager.UserManager.GetUserAsync(User);
     var dataProtectionProvider = DataProtectionProvider.Create("EncryptData");
     var protector = dataProtectionProvider.CreateProtector("MySecretKey");
+    var PreviousPasswords = contxt.HttpContext.Session.GetString("Previous Passwords");
+    var previousPasswordsArray = PreviousPasswords?.Split('|');
 }
 
 <div class="text-center">
@@ -30,13 +31,22 @@
             {
                 <div id="UserInformation" disabled>
                     <p>Your Email: @protector.Unprotect(contxt.HttpContext.Session.GetString("Email"))</p>
-                    <p>Your Full Name: @protector.Unprotect(contxt.HttpContext.Session.GetString("Password"))</p>
+                    <p>Your Password: @protector.Unprotect(contxt.HttpContext.Session.GetString("Password"))</p>
                     <p>Your Full Name: @protector.Unprotect(contxt.HttpContext.Session.GetString("Full Name"))</p>
                     <p>Your credit card: @protector.Unprotect(contxt.HttpContext.Session.GetString("Credit Card"))</p>
                     <p>Your gender: @protector.Unprotect(contxt.HttpContext.Session.GetString("Gender"))</p>
                     <p>Your mobile number: @protector.Unprotect(contxt.HttpContext.Session.GetString("Mobile Number"))</p>
                     <p>Your delivery address: @protector.Unprotect(contxt.HttpContext.Session.GetString("Delivery Address"))</p>
                     <p>Your about me: @protector.Unprotect(contxt.HttpContext.Session.GetString("About Me"))</p>
+                    <p>Your last login: @contxt.HttpContext.Session.GetString("Last Login")</p>
+                    @if (@protector.Unprotect(previousPasswordsArray[1]) != ""){
+                        <p>Your previous passwords: @protector.Unprotect(previousPasswordsArray[0]).ToString() & @protector.Unprotect(previousPasswordsArray[1]).ToString()</p>
+                    }
+                    else
+                    {
+                        <p>Your previous passwords: @protector.Unprotect(previousPasswordsArray[0]).ToString()</p>
+                    }
+                    <p>Your last password change: @contxt.HttpContext.Session.GetString("Last Password Change")</p>
                     <p>Your photo:</p>
                     <img src="@contxt.HttpContext.Session.GetString("Photo Path")" alt="User Photo" />
                 </div>

@@ -1,6 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Http;
 using WebApplication3.Model;
 
 namespace WebApplication3.ViewModels

@@ -142,11 +142,6 @@
 </script>
 <script src="https://www.google.com/recaptcha/api.js?render=6LfD614pAAAAANHzMS7s5HYfo7GsLHwxvszNbZPz"></script>
 <script>
-    function onSubmit(token) {
-        document.getElementById('recaptchaToken').value = token;
-        document.getElementById('register-form').submit();
-    }
-
     var recaptchaResponse = 0;
     grecaptcha.ready(function () {
         grecaptcha.execute('6LfD614pAAAAANHzMS7s5HYfo7GsLHwxvszNbZPz', { action: 'submit' })
