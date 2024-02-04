@@ -72,7 +72,6 @@ namespace WebApplication3.Pages
 
                 if (!recaptchaResult.Success)
                 {
-                    ModelState.AddModelError("", "reCAPTCHA verification failed.");
                     TempData["ErrorMessage"] = "reCAPTCHA verification failed.";
                     return RedirectToPage();
                 }
