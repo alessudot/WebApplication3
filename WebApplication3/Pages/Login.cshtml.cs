@@ -82,7 +82,7 @@ namespace WebApplication3.Pages
                     TempData["ErrorMessage"] = "Account is locked out due to 3 failed login attempts. Please try again in later.";
                     return RedirectToPage();
                 }
-                else if (currentUser.TwoFactorEnabled != true || currentUser.EmailConfirmed != true)
+                else if (currentUser.EmailConfirmed != true)
                 {
                     TempData["ErrorMessage"] = "Your account is not activated, please check your email for an activation link.";
                     return RedirectToPage();
