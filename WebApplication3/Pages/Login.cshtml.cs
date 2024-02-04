@@ -40,42 +40,39 @@ namespace WebApplication3.Pages
                 var result = await signInManager.PasswordSignInAsync(LModel.Email, LModel.Password,
                     LModel.RememberMe, true);
                 var currentUser = await userManager.FindByEmailAsync(LModel.Email);
-                if (result.Succeeded)
+                if (result.Succeeded && currentUser != null && currentUser.EmailConfirmed == true)
                 {
                     currentUser.LastLogin = DateTime.Now;
                     await userManager.UpdateAsync(currentUser);
-                    if (currentUser != null)
-                    {
-                        contxt.HttpContext.Session.SetString("LoggedIn", "True");
-                        contxt.HttpContext.Session.SetString("Email", protector.Protect(LModel.Email));
-                        contxt.HttpContext.Session.SetString("Password", protector.Protect(LModel.Password));
-                        contxt.HttpContext.Session.SetString("Full Name", currentUser.FullName.ToString());
-                        contxt.HttpContext.Session.SetString("Credit Card", currentUser.CreditCard.ToString());
-                        contxt.HttpContext.Session.SetString("Gender", currentUser.Gender.ToString());
-                        contxt.HttpContext.Session.SetString("Mobile Number", currentUser.MobileNo.ToString());
-                        contxt.HttpContext.Session.SetString("Delivery Address", currentUser.DeliveryAddress.ToString());
-                        contxt.HttpContext.Session.SetString("About Me", currentUser.AboutMe.ToString());
-                        contxt.HttpContext.Session.SetString("Photo Path", currentUser.PhotoPath.ToString());
-                        contxt.HttpContext.Session.SetString("Last Login", currentUser.LastLogin.ToString());
-                        contxt.HttpContext.Session.SetString("Previous Passwords", currentUser.PreviousPasswords.ToString());
-						contxt.HttpContext.Session.SetString("Last Password Change", currentUser.LastPasswordChange.ToString());
-						string authToken = Guid.NewGuid().ToString();
+                    contxt.HttpContext.Session.SetString("LoggedIn", "True");
+                    contxt.HttpContext.Session.SetString("Email", protector.Protect(LModel.Email));
+                    contxt.HttpContext.Session.SetString("Password", protector.Protect(LModel.Password));
+                    contxt.HttpContext.Session.SetString("Full Name", currentUser.FullName.ToString());
+                    contxt.HttpContext.Session.SetString("Credit Card", currentUser.CreditCard.ToString());
+                    contxt.HttpContext.Session.SetString("Gender", currentUser.Gender.ToString());
+                    contxt.HttpContext.Session.SetString("Mobile Number", currentUser.MobileNo.ToString());
+                    contxt.HttpContext.Session.SetString("Delivery Address", currentUser.DeliveryAddress.ToString());
+                    contxt.HttpContext.Session.SetString("About Me", currentUser.AboutMe.ToString());
+                    contxt.HttpContext.Session.SetString("Photo Path", currentUser.PhotoPath.ToString());
+                    contxt.HttpContext.Session.SetString("Last Login", currentUser.LastLogin.ToString());
+                    contxt.HttpContext.Session.SetString("Previous Passwords", currentUser.PreviousPasswords.ToString());
+					contxt.HttpContext.Session.SetString("Last Password Change", currentUser.LastPasswordChange.ToString());
+					string authToken = Guid.NewGuid().ToString();
 
-                        contxt.HttpContext.Session.SetString("AuthToken", authToken);
+                    contxt.HttpContext.Session.SetString("AuthToken", authToken);
 
-                        contxt.HttpContext.Response.Cookies.Append("AuthToken", authToken, new CookieOptions
-                        {
-                            HttpOnly = true,
-                            Secure = true,
-                            Expires = DateTimeOffset.UtcNow.AddDays(3)
-                        });
-                        return RedirectToPage("Index");
-                    }
-                    else
+                    contxt.HttpContext.Response.Cookies.Append("AuthToken", authToken, new CookieOptions
                     {
-                        TempData["ErrorMessage"] = "Unable to retrieve user information.";
-                        return RedirectToPage();
-                    }
+                        HttpOnly = true,
+                        Secure = true,
+                        Expires = DateTimeOffset.UtcNow.AddDays(3)
+                    });
+                    return RedirectToPage("Index");
+                }
+                else if(currentUser == null)
+                {
+                    TempData["ErrorMessage"] = "Unable to retrieve user information.";
+                    return RedirectToPage();
                 }
                 else if (result.IsLockedOut)
                 {
@@ -89,7 +86,7 @@ namespace WebApplication3.Pages
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Incorrect username or password. Please try again.";
+                    TempData["ErrorMessage"] = "Incorrect email or password. Please try again.";
                     return RedirectToPage();
                 }
             }
